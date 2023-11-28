@@ -29,6 +29,7 @@ module "aks_blue" {
   acr_id                     = data.azurerm_container_registry.shared_container_registry.id
   ingress_agw_private_ip     = var.PRIVATE_IP_AKS_AGW
   ingress_agw_subnet_id      = azurerm_subnet.aks_agw.id
+  user_assigned_identity     = azurerm_user_assigned_identity.aks.id
 
   tenant_id = var.TENANTID
 
@@ -68,6 +69,7 @@ module "aks_green" {
   acr_id                     = data.azurerm_container_registry.shared_container_registry.id
   ingress_agw_private_ip     = var.PRIVATE_IP_AKS_AGW_GREEN
   ingress_agw_subnet_id      = azurerm_subnet.aks_agw.id
+  user_assigned_identity     = azurerm_user_assigned_identity.aks.id
 
   tenant_id = var.TENANTID
 

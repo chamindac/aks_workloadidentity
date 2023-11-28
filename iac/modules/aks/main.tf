@@ -178,6 +178,16 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
   }), var.tags)
 }
 
+# Federated identity credential for AKS user assigned id - to be used with workload identity service account
+resource "azurerm_federated_identity_credential" "aks" {
+  name                = "${var.prefix}-${var.project}-${var.environment_name}-aks-fic-${var.deployment_name}"
+  resource_group_name = var.rg_name
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = azurerm_kubernetes_cluster.aks_cluster.oidc_issuer_url
+  parent_id           = var.user_assigned_identity
+  subject             = "system:serviceaccount:widemo:wi-demo-sa" # system:serviceaccount:aksapplicationnamespace:workloadidentityserviceaccountname
+}
+
 resource "azurerm_role_assignment" "acr_attach" {
   principal_id                     = azurerm_kubernetes_cluster.aks_cluster.kubelet_identity[0].object_id
   role_definition_name             = "AcrPull"
