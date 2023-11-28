@@ -7,3 +7,11 @@ We need to set both below properties to true to enable workload identity for AKS
   oidc_issuer_enabled       = true
   workload_identity_enabled = true
 ```
+
+To run IaC locally set the `subscriptionid` and `tenantid` in `iac\backends\dev.cfg`. Ensure you have astorage account created with the name of `stdemotfstate001` in a resource group named `rg-demo-tfstate` and it has a container `tfstate` (If required you can change the names of tf state resource group etc. and update the `dev.cfg` accordingly). Following command will setup AKS with workload identity enabled. AKS blue-green depoyment support is also added in the TF code.
+
+```
+  terraform init -backend-config='/backends/dev.cfg'
+  terraform plan -var-file='env.tfvars' -out='my.tfplan'
+  terraform apply my.tfplan
+```

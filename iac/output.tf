@@ -37,3 +37,19 @@ output "app_deploy_dns_zone" {
     )
   )), "*", ""), ".")
 }
+
+output "aks_oidc_issuer_url" {
+  value = var.SYS_GREEN_IS_LIVE ? (
+    var.SYS_DEPLOYMENT_PHASE == "deploy" ? (
+      var.SYS_BLUE_DEPLOY ? module.aks_blue[0].aks_oidc_issuer_url : module.aks_green[0].aks_oidc_issuer_url
+      ) : (
+      module.aks_green[0].aks_oidc_issuer_url
+    )
+    ) : (
+    var.SYS_DEPLOYMENT_PHASE == "deploy" ? (
+      var.SYS_GREEN_DEPLOY ? module.aks_green[0].aks_oidc_issuer_url : module.aks_blue[0].aks_oidc_issuer_url
+      ) : (
+      module.aks_blue[0].aks_oidc_issuer_url
+    )
+  )
+}
