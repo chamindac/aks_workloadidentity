@@ -53,3 +53,7 @@ output "aks_oidc_issuer_url" {
     )
   )
 }
+
+output "aks_uai_client_id" {
+  value = azurerm_user_assigned_identity.aks.client_id
+}
