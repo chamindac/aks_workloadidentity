@@ -259,3 +259,19 @@ resource "azurerm_role_assignment" "aks_agw_snet" {
     ignore_changes = []
   }
 }
+
+# Grant contributor access to AKS node resource group for sub_owners
+resource "azurerm_role_assignment" "aks_node_rg" {
+  principal_id         = var.sub_owners_objectid
+  role_definition_name = "Contributor"
+  scope                = data.azurerm_resource_group.aks_node_rg.id
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks_cluster,
+    data.azurerm_resource_group.aks_node_rg
+  ]
+
+  lifecycle {
+    ignore_changes = []
+  }
+}

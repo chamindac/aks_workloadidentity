@@ -30,9 +30,27 @@ resource "azurerm_federated_identity_credential" "aks" {
   subject             = "system:serviceaccount:widemo:wi-demo-sa" # system:serviceaccount:aksapplicationnamespace:workloadidentityserviceaccountname
 }
 ```
-Grant the azure resources access to user assigned identity in terraform.
+Grant the azure resources access to user assigned identity in terraform. Here we do for key vault and app config service.
 
+Key vault access policy. See iac\keyvault.tf .
+```
+# Containers in AKS via user assigned identity
+  access_policy {
+    tenant_id          = var.TENANTID
+    object_id          = azurerm_user_assigned_identity.aks.principal_id # principal_id is the object id of the user assigned identity
+    secret_permissions = ["Get", "List", ]
+  }
+```
+App config service data reader role. See iac\appconfig.tf .
 
+```
+# AKS user assigned identity as a reader
+resource "azurerm_role_assignment" "appconf_datareader_aks" {
+  scope                = azurerm_app_configuration.appconf.id
+  role_definition_name = "App Configuration Data Reader"
+  principal_id         = azurerm_user_assigned_identity.aks.principal_id
+}
+```
 
 ### How to run IaC
 To run IaC locally set the `subscriptionid` and `tenantid` in `iac\backends\dev.cfg`. Ensure you have astorage account created with the name of `stdemotfstate001` in a resource group named `rg-demo-tfstate` and it has a container `tfstate` (If required you can change the names of tf state resource group etc. and update the `dev.cfg` accordingly). Following command will setup AKS with workload identity enabled. AKS blue-green depoyment support is also added in the TF code.
