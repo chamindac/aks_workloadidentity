@@ -109,3 +109,5 @@ Since our demo api only accessible via internal ingress url within the vnet (whi
 ```
 kubectl port-forward service/wi-api-clusterip 8085:8091 -n widemo
 ```
+
+![image](https://github.com/chamindac/aks_workloadidentity/assets/20109548/599d9d1c-f078-4f1a-a588-c07417fd757f)
