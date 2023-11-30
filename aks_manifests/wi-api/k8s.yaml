@@ -51,14 +51,14 @@ spec:
           # open new socket for retrying
           - name: single-request-reopen
       #------------------------------------------------------
-      # volumes:
-      #   # `name` here must match the name
-      #   # specified in the volume mount
-      #   - name: widemo-configmap-wi-api-volume
-      #     configMap:
-      #       # `name` here must match the name
-      #       # specified in the ConfigMap's YAML
-      #       name: widemo-configmap
+      volumes:
+        # `name` here must match the name
+        # specified in the volume mount
+        - name: widemo-configmap-wi-api-volume
+          configMap:
+            # `name` here must match the name
+            # specified in the ConfigMap's YAML. See aks_manifests\prerequisites\k8s.yaml
+            name: widemo-configmap
       terminationGracePeriodSeconds: 90 # This must be set to a value that is greater than the preStop hook wait time.
       containers:
         - name: wi-api
@@ -66,7 +66,7 @@ spec:
             preStop:
               exec:
                 command: ["sleep","60"]
-          image: chdemosharedacr.azurecr.io/widemo/wi-api:1.0
+          image: chdemosharedacr.azurecr.io/widemo/wi-api:1.1
           imagePullPolicy: Always
           # probe to determine the stratup success
           startupProbe:
@@ -99,9 +99,9 @@ spec:
             successThreshold: 1 # how many consecutive success probes to consider as success after a failure probe
             timeoutSeconds: 10 # probe timeout 
             terminationGracePeriodSeconds: 60 # restarts container (default restart policy is always)
-          # volumeMounts:
-          # - mountPath: /etc/config
-          #   name: widemo-configmap-wi-api-volume
+          volumeMounts:
+          - mountPath: /etc/config
+            name: widemo-configmap-wi-api-volume
           ports:
             - name: container-port
               containerPort: 80
@@ -111,8 +111,8 @@ spec:
               value: http://+:80
             - name: ASPNETCORE_ENVIRONMENT
               value: Production
-            # - name: DEMO_CONFIG_PATH
-            #   value: /etc/config/config_dev-euw-001.json
+            - name: CH_WIDEMO_CONFIG
+              value: /etc/config/config_dev-euw-001.json
           resources:
                 limits:
                   memory: 1Gi # the memory limit equals to the request!

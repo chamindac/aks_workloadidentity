@@ -5,6 +5,8 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine3.18-amd64 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+COPY ["common-lib/common-lib.csproj", "common-lib/"]
 COPY ["demo.api/demo.api.csproj", "demo.api/"]
 RUN dotnet restore "demo.api/demo.api.csproj"  -r linux-musl-x64
 COPY . .

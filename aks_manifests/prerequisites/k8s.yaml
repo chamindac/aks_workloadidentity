@@ -4,6 +4,23 @@ metadata:
   name: widemo
 
 ---
+# Config map enabling access to KV and App Config Service - replace with actual tenant id and resource names. Can be token replace ment from pipeline for ap config labels when blue green deploymentsin diffrent environments
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: widemo-configmap
+  namespace: widemo
+data:
+  config_dev-euw-001.json: |
+    {
+      "AppConfigEndpoint": "https://ch-wi-dev-euw-001-appconfig-ac.azconfig.io",
+      "AppConfigLabel": "ch-wi-dev-euw-001-rg-blue",
+      "SharedAppConfiglabel": "ch-wi-dev-euw-001-rg",
+      "KeyVaultName": "ch-wi-dev-euw-001-kv",
+      "AadTenantId": "tenantid"
+    }
+
+---
 apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
