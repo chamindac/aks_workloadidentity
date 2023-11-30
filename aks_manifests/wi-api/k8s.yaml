@@ -1,0 +1,168 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wi-api
+  namespace: widemo
+  labels:
+    app: wi-api
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 25%
+  minReadySeconds: 0
+  selector:
+    matchLabels:
+      service: wi-api
+  template:
+    metadata:
+      labels:
+        app: wi-api
+        service: wi-api
+        azure.workload.identity/use: "true" # Required to make the contianers in the pod to use the workload identity
+      # annotations:
+      #   azure.workload.identity/service-account-token-expiration: "3600" # Configure to avoid down time in token refresh. Takes precedence over servie acount setting. Default 3600, acceptable range: seconds 3600 - 86400.
+      #   azure.workload.identity/skip-containers: "container1:container2" # Containers o skip using workload identity. By default all containers in pod will use workload identity when pod is labeled with azure.workload.identity/use: true 
+      #   azure.workload.identity/inject-proxy-sidecar: "true" # Default true. The proxy sidecar is used to intercept token requests to IMDS (Azure Instance Metadata Service) and acquire an AAD token on behalf of the user with federated identity credential.
+      #   azure.workload.identity/proxy-sidecar-port: "8000" # Port of the proxy sidecar. Default 8000
+    spec:
+      serviceAccountName: wi-demo-sa # Service account (see aks_manifests\prerequisites\k8s.yaml) will provide identity to the pod https://azure.github.io/azure-workload-identity/docs/concepts.html
+      nodeSelector:
+        "kubernetes.io/os": linux
+      priorityClassName: widemo-highest-priority-linux
+      #------------------------------------------------------
+      # setting pod DNS policies to enable faster DNS resolution
+      # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+      dnsConfig:
+        options:
+          # use FQDN everywhere 
+          # any cluster local access from pods need full CNAME to resolve 
+          # short names will not resolve to internal cluster domains
+          - name: ndots
+            value: "2"
+          # dns resolver timeout and attempts
+          - name: timeout
+            value: "15"
+          - name: attempts
+            value: "3"
+          # use TCP to resolve DNS instad of using UDP (UDP is lossy and pods need to wait for timeout for lost packets)
+          - name: use-vc
+          # open new socket for retrying
+          - name: single-request-reopen
+      #------------------------------------------------------
+      # volumes:
+      #   # `name` here must match the name
+      #   # specified in the volume mount
+      #   - name: widemo-configmap-wi-api-volume
+      #     configMap:
+      #       # `name` here must match the name
+      #       # specified in the ConfigMap's YAML
+      #       name: widemo-configmap
+      terminationGracePeriodSeconds: 90 # This must be set to a value that is greater than the preStop hook wait time.
+      containers:
+        - name: wi-api
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep","60"]
+          image: chdemosharedacr.azurecr.io/widemo/wi-api:1.0
+          imagePullPolicy: Always
+          # probe to determine the stratup success
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: container-port
+            initialDelaySeconds: 30 # give 30 seconds to get container started before checking health
+            failureThreshold: 30 # max 300 (30*10) seconds wait for start up to succeed
+            periodSeconds: 10 # interval of probe (300 (30*10) start up to succeed)
+            successThreshold: 1 # how many consecutive success probes to consider as success
+            timeoutSeconds: 10 # probe timeout 
+            terminationGracePeriodSeconds: 30 # restarts container (default restart policy is always)
+          # readiness probe fail will not restart container but cut off traffic to container with one failure 
+          # as specified below and keep readiness probes running to see if container works again
+          readinessProbe: # probe to determine if the container is ready for traffic (used by AGIC)
+            httpGet:
+              path: /api/health
+              port: container-port
+            failureThreshold: 1 # one readiness fail should stop traffic to container
+            periodSeconds: 20 # interval of probe
+            # successThreshold not supported by AGIC
+            timeoutSeconds: 10 # probe timeout
+          # probe to determine the container is healthy and if not healthy container will restart
+          livenessProbe: 
+            httpGet:
+              path: /api/health
+              port: container-port
+            failureThreshold: 3 # tolerates three consecutive faiures before restart trigger
+            periodSeconds: 40 # interval of probe
+            successThreshold: 1 # how many consecutive success probes to consider as success after a failure probe
+            timeoutSeconds: 10 # probe timeout 
+            terminationGracePeriodSeconds: 60 # restarts container (default restart policy is always)
+          # volumeMounts:
+          # - mountPath: /etc/config
+          #   name: widemo-configmap-wi-api-volume
+          ports:
+            - name: container-port
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: ASPNETCORE_URLS
+              value: http://+:80
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            # - name: DEMO_CONFIG_PATH
+            #   value: /etc/config/config_dev-euw-001.json
+          resources:
+                limits:
+                  memory: 1Gi # the memory limit equals to the request!
+                  # no cpu limit! this is excluded on purpose
+                requests:
+                  memory: 1Gi
+                  cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wi-api-clusterip
+  namespace: widemo
+  labels:
+    app: wi-api
+    service: wi-api
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8091
+      targetPort: 80
+      protocol: TCP
+  selector:
+    service: wi-api
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wi-api
+  namespace: widemo
+  annotations:
+    # --------------
+    # AGIC
+    appgw.ingress.kubernetes.io/connection-draining: "true"
+    appgw.ingress.kubernetes.io/connection-draining-timeout: "120"
+    appgw.ingress.kubernetes.io/use-private-ip: "true"
+    appgw.ingress.kubernetes.io/request-timeout: "30"
+    # --------------
+spec:
+  ingressClassName: azure-application-gateway
+  rules:
+  - host: wi-api.aksblue.ch-wi-dev-euw-001.net
+    http:
+      paths:
+      - path: /*
+        pathType: Prefix
+        backend:
+          service:
+            name: wi-api-clusterip
+            port:
+              number: 8091

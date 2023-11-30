@@ -1,0 +1,143 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: widemo
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: widemo-system-highest-priority-linux
+value: 10000000
+globalDefault: true
+description: "This priority class is used for highest priority widemo system services which are essential."
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: widemo-highest-priority-linux
+value: 1000000
+globalDefault: false
+description: "This priority class should be used for highest priority widemo service pods (linux) only."
+
+# ---
+# apiVersion: scheduling.k8s.io/v1
+# kind: PriorityClass
+# metadata:
+#   name: widemo-medium-priority-linux
+# value: 100000
+# globalDefault: false
+# description: "This priority class should be used for medium priority widemo service pods (linux) only. Will be default priority for pods with no priority class set."
+
+# ---
+# apiVersion: scheduling.k8s.io/v1
+# kind: PriorityClass
+# metadata:
+#   name: widemo-lowest-priority-linux
+# value: 10000
+# globalDefault: false
+# description: "This priority class should be used for lowest priority widemo service pods (linux) only."
+
+# Resource quota allocation for each priority class
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: widemo-highest-priority-linux
+  namespace: widemo
+spec:
+  hard:
+    requests.cpu: "42"
+    limits.memory: 100Gi
+  scopeSelector:
+    matchExpressions:
+    - operator : In
+      scopeName: PriorityClass
+      values: ["widemo-highest-priority-linux"]
+
+
+# ---
+# apiVersion: v1
+# kind: ResourceQuota
+# metadata:
+#   name: widemo-medium-priority-linux
+#   namespace: widemo
+# spec:
+#   hard:
+#     requests.cpu: "5"
+#     limits.memory: 20Gi
+#   scopeSelector:
+#     matchExpressions:
+#     - operator : In
+#       scopeName: PriorityClass
+#       values: ["widemo-medium-priority-linux"]
+
+# ---
+# apiVersion: v1
+# kind: ResourceQuota
+# metadata:
+#   name: widemo-lowest-priority-linux
+#   namespace: widemo
+# spec:
+#   hard:
+#     requests.cpu: "2"
+#     limits.memory: 8Gi
+#   scopeSelector:
+#     matchExpressions:
+#     - operator : In
+#       scopeName: PriorityClass
+#       values: ["widemo-lowest-priority-linux"]
+
+# Servie account to provide identity to the running pods in namespace widemo
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    azure.workload.identity/client-id: "userassignedidentitycientid" #${USER_ASSIGNED_CLIENT_ID}$ # user Assigned identity client ID (aks_uai_client_id output from Terraform)
+    azure.workload.identity/tenant-id: "tenantid" #${AZURE_TENANT_ID}$ # Azure tenant id
+    # azure.workload.identity/service-account-token-expiration: "3600" # Default is 3600. Supported range is 3600-86400. Configure to avoid down time in token refresh. Setting in Pod spec takes precedence.
+  name: wi-demo-sa
+  namespace: widemo
+
+---
+# HPA for wi-api
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wi-api-hpa
+  namespace: widemo
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wi-api
+  maxReplicas: 10
+  minReplicas: 1
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 120
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 15
+      policies:
+      - type: Percent
+        value: 60
+        periodSeconds: 30
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70

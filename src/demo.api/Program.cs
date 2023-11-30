@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddAzureAppConfiguration(options =>
 {
     DefaultAzureCredential azureCredentials = new(
-        // Provide tenant id as shwon below 
+        // Provide tenant id as shown below 
         //  or specify environment variable AZURE_TENANT_ID
         // or in terminal az login and set subscription to a subscription in the tenant you want to use before "dotnet run"
         //new DefaultAzureCredentialOptions { 

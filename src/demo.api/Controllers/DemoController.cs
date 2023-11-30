@@ -17,7 +17,7 @@ public class DemoController : ControllerBase
         _configuration = configuration;
     }
 
-    [HttpGet("Test")]
+    [HttpGet("health")] // Fake health api call to support k8s probes. Do proper health endpoint implmentation for api (https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-8.0) 
     public string Test()
     {
         return "API is working...";
