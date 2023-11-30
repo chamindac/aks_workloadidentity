@@ -186,6 +186,14 @@ resource "azurerm_federated_identity_credential" "aks" {
   issuer              = azurerm_kubernetes_cluster.aks_cluster.oidc_issuer_url
   parent_id           = var.user_assigned_identity
   subject             = "system:serviceaccount:widemo:wi-demo-sa" # system:serviceaccount:aksapplicationnamespace:workloadidentityserviceaccountname
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks_cluster
+  ]
+
+  lifecycle {
+    ignore_changes = []
+  }
 }
 
 resource "azurerm_role_assignment" "acr_attach" {

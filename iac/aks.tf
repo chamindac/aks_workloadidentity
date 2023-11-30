@@ -37,6 +37,7 @@ module "aks_blue" {
     azurerm_subnet.aks_agw,
     azurerm_subnet.aks,
     azurerm_subnet_network_security_group_association.aks_nsg,
+    azurerm_user_assigned_identity.aks,
     # All below dependencies to make aks the last deployment
     azurerm_private_dns_a_record.aks_agw_blue,
     azurerm_app_configuration_key.config_kv,
@@ -82,6 +83,7 @@ module "aks_green" {
     azurerm_subnet.aks_agw,
     azurerm_subnet.aks,
     azurerm_subnet_network_security_group_association.aks_nsg,
+    azurerm_user_assigned_identity.aks,
     # All below dependencies to make aks the last deployment
     azurerm_private_dns_a_record.aks_agw_green,
     azurerm_app_configuration_key.config_kv,
