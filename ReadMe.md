@@ -102,6 +102,8 @@ template:
       #   azure.workload.identity/skip-containers: "container1:container2" # Containers o skip using workload identity. By default all containers in pod will use workload identity when pod is labeled with azure.workload.identity/use: true 
       #   azure.workload.identity/inject-proxy-sidecar: "true" # Default true. The proxy sidecar is used to intercept token requests to IMDS (Azure Instance Metadata Service) and acquire an AAD token on behalf of the user with federated identity credential.
       #   azure.workload.identity/proxy-sidecar-port: "8000" # Port of the proxy sidecar. Default 8000
+    spec:
+      serviceAccountName: wi-demo-sa # Service account (see aks_manifests\prerequisites\k8s.yaml) will provide identity to the pod https://azure.github.io/azure-workload-identity/docs/concepts.html
 ```
 
 Since our demo api only accessible via internal ingress url within the vnet (which we can expose publicly with public IP if required, But here the intention is for the API to be used with web apps in same vnet so no need of exposing the api with public IP of ingress controlller app gateway), we can use port forwarding to access swagger ui of the API. Then we can test app configuration and keyvault secret reading works as expected in the API.
