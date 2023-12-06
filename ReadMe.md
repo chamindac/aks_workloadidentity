@@ -62,7 +62,7 @@ To run IaC locally set the `subscriptionid` and `tenantid` in `iac\backends\dev.
 ```
 
 ### Setting up application prerequisites
-Next step is to setup a service account (will be used to provide identity for the applications running in the pods)[https://azure.github.io/azure-workload-identity/docs/concepts.html#service-account]. Service account cab setup as shown below. See `aks_manifests\prerequisites\k8s.yaml`. You can use make or use `kubectl apply -f k8s.yaml`. If a pipeline such as Azure pipeline is used, then use teraform output to obtain the user assigned identity client id, and use it in pipeline to replace token `#${USER_ASSIGNED_CLIENT_ID}$`.
+Next step is to setup a service account (will be used to provide identity for the applications running in the pods)[https://azure.github.io/azure-workload-identity/docs/concepts.html#service-account]. Service account should be in same namespace as your pod/deployment and can be setup as shown below. See `aks_manifests\prerequisites\k8s.yaml`. You can use make or use `kubectl apply -f k8s.yaml`. If a pipeline such as Azure pipeline is used, then use teraform output to obtain the user assigned identity client id, and use it in pipeline to replace token `#${USER_ASSIGNED_CLIENT_ID}$`.
 
 ```
 apiVersion: v1
