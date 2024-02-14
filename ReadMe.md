@@ -1,5 +1,5 @@
 # Workload Identity Implementation for AKS Using Terraform
-This is an example implementaion of workload identity that will help to understand the concept of using workload identity, to enable access to Azure resources such as app config service, key vault etc., for pods in AKS using workload identity. In detail explanation with example .NET code is available in my blog post "(Setting Up Azure Workload Identity for Containers in Azure Kubernetes Services (AKS) Using Terraform - Improved Security for Containers in AKS)[https://chamindac.blogspot.com/2023/12/setting-up-azure-workload-identity-for.html]". 
+This is an example implementaion of workload identity that will help to understand the concept of using workload identity, to enable access to Azure resources such as app config service, key vault etc., for pods in AKS using workload identity. In detail explanation with example .NET code is available in my blog post "(Setting Up Azure Workload Identity for Containers in Azure Kubernetes Services Using Terraform - Improved Security for Containers in AKS)[https://chamindac.blogspot.com/2023/12/setting-up-azure-workload-identity-for.html]". 
 
 ### Setting up AKS with TF enabling workload identity
 We need to set both below properties to true to enable workload identity for AKS in terraform resource `azurerm_kubernetes_cluster` in `iac\modules\aks\main.tf`.
