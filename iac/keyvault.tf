@@ -18,7 +18,7 @@ resource "azurerm_key_vault" "instancekeyvault" {
   network_acls {
     bypass         = "AzureServices"
     default_action = "Deny"
-    ip_rules       = ["xxx.xxx.xxx.xxx/32", "${chomp(data.http.mytfip.response_body)}/32"]
+    ip_rules       = ["${chomp(data.http.mytfip.response_body)}/32"]
     virtual_network_subnet_ids = [
       "${azurerm_subnet.aks.id}"
     ]
